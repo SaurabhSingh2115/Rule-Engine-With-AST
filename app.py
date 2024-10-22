@@ -54,20 +54,47 @@ def parse_rule_expression(self, rule_expression):
             else:
                 stack[-1].append(token)
 
-    def build_ast(expr):
-        if isinstance(expr, list):
-            if len(expr) == 1:
-                return build_ast(expr[0])
-            elif 'OR' in expr:
-                ind = expr.index('OR')
-                return AbstractSyntaxTreeNode('OR', build_ast(expr[:ind]), build_ast(expr[ind+1:]))
-            elif 'AND' in expr:
-                ind = expr.index('AND')
-                return AbstractSyntaxTreeNode('AND', build_ast(expr[:ind]), build_ast(expr[ind+1:]))
+        def build_ast(expr):
+            if isinstance(expr, list):
+                if len(expr) == 1:
+                    return build_ast(expr[0])
+                elif 'OR' in expr:
+                    ind = expr.index('OR')
+                    return AST_TreeNode('OR', build_ast(expr[:ind]), build_ast(expr[ind+1:]))
+                elif 'AND' in expr:
+                    ind = expr.index('AND')
+                    return AST_TreeNode('AND', build_ast(expr[:ind]), build_ast(expr[ind+1:]))
+            return AST_TreeNode('operand', ' '.join(expr))
+        
         return build_ast(stack[0])
     
     return parse_expression()
 
+
+def evaluate_node(node, data):
+    if node.node_type == 'operator':
+        if node.value == 'AND':
+            return evaluate_node(node.left, data) and evaluate_node(node.right, data)
+        elif node.value == 'OR':
+            return evaluate_node(node.left, data) or evaluate_node(node.right, data)
+    elif node.node_type == 'operand':
+        left_operand, operator, right_operand = node.value.split()
+        left_value = data.get(left_operand)
+        right_value = int(right_operand) if right_operand.isdigit() else data.get(right_operand)
+        if operator == '=':
+            return left_value == right_value
+        elif operator == '!=':
+            return left_value != right_value
+        elif operator == '>':
+            return left_value > right_value
+        elif operator == '<':
+            return left_value < right_value
+        elif operator == '>=':
+            return left_value >= right_value
+        elif operator == '<=':
+            return left_value <= right_value
+    return False
+        
 @app.route('/create_rule', methods=['POST'])
 def create_rule():
     rule_expression = request.json.get('rule_expression')
@@ -77,6 +104,8 @@ def create_rule():
     session.commit()
     return jsonify({'id': new_rule.id, 'rule_ast': new_rule.rule_ast})
 
+
+# @app.route('/')
 
 if __name__ == '__main__':
     app.run(debug=True)
