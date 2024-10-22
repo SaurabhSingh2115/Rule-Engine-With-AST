@@ -8,7 +8,7 @@ import logging
 app = Flask(__name__)
 
 Base = declarative_base()
-class RuleModeL(Base):
+class RuleModel(Base):
     __tablename__ = 'rules'
     id = Column(Integer, primary_key=True)
     rule_expression = Column(String, nullable=False)
@@ -83,29 +83,55 @@ def evaluate_node(node, data):
         right_value = int(right_operand) if right_operand.isdigit() else data.get(right_operand)
         if operator == '=':
             return left_value == right_value
-        elif operator == '!=':
-            return left_value != right_value
+        # elif operator == '!=':
+        #     return left_value != right_value
         elif operator == '>':
             return left_value > right_value
         elif operator == '<':
             return left_value < right_value
-        elif operator == '>=':
-            return left_value >= right_value
-        elif operator == '<=':
-            return left_value <= right_value
+        # elif operator == '>=':
+        #     return left_value >= right_value
+        # elif operator == '<=':
+        #     return left_value <= right_value
     return False
         
 @app.route('/create_rule', methods=['POST'])
 def create_rule():
     rule_expression = request.json.get('rule_expression')
     rule_ast = json.dumps({'example': 'AST'})
-    new_rule = RuleModeL(rule_expression=rule_expression, rule_ast=rule_ast)
+    new_rule = RuleModel(rule_expression=rule_expression, rule_ast=rule_ast)
     session.add(new_rule)
     session.commit()
     return jsonify({'id': new_rule.id, 'rule_ast': new_rule.rule_ast})
 
 
-# @app.route('/')
+@app.route('/evaluate_rule', maethods=['POST'])
+
+def evaluate_rule():
+    rule_id = request.json.get('rule_id')
+    rule = session.query(RuleModel).filter_by(id=rule_id).first()
+    if not rule:
+        return jsonify({'error': 'Rule not found'}), 404
+    node = AST_TreeNode(json.loads(rule.rule_ast))
+    data = request.json.get('data')
+    res = evaluate_node(node, data)
+    return jsonify({'result': res})
+
+@app.route('/modify_rule', methods=['POST'])
+def modify_rule():
+    try:
+        rule_id = request.json.get('rule_id')
+        new_rule_expression = request.json.get('rule_expression')
+        rule = session.query(RuleModel).filter_by(id=rule_id).first()
+        if not rule:
+            return jsonify({'error': 'Rule not found'}), 404
+        rule.rule_expression = new_rule_expression
+        rule.ast = json.dumps(parse_rule_expression(new_rule_expression)).convert_to_dict()
+        session.commit()
+        return jsonify("outcome:" "Rule modified successfully")
+    except Exception as e:
+        logging.error(f"Error in modify_rule: {e}")
+        return jsonify({'error': 'Internal server error'}), 500    
 
 if __name__ == '__main__':
     app.run(debug=True)
