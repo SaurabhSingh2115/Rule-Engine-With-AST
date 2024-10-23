@@ -7,7 +7,7 @@ def test_create_rule(rule_expression, file):
     file.write("...Testing create_rule...\n")
     url = f"{BASE_URL}/create_rule"
     data = {"rule_expression": rule_expression}
-    response = requests.post(url, json=data)
+    response = requests.post(url, json=data) 
     try:
         response_json = response.json()
     except json.JSONDecodeError:
@@ -56,23 +56,22 @@ def test_modify_rule(rule_id, new_rule_expression, file):
 if __name__ == "__main__":
     with open("test_results.txt", "w") as file:
         # Create Rule 1
-        rule_string_1 = "(age > 30 AND department = 'Sales')"
+        rule_string_1 = "((age > 30 AND department = 'Sales') OR (age < 25 AND department = 'Marketing')) AND (salary > 50000 OR experience > 5)"
         rule_id_1 = test_create_rule(rule_string_1, file)
 
         # Create Rule 2
-        rule_string_2 = "(salary > 50000 OR experience > 5)"
+        rule_string_2 = "((age > 30 AND department = 'Marketing')) AND (salary > 20000 OR experience > 5)"
         rule_id_2 = test_create_rule(rule_string_2, file)
 
         # Combine Rules
         combined_rule_id = test_combine_rules(rule_id_1, rule_id_2, file)
 
         # Evaluate Combined Rule
-        data = {
-            "age": 35,
-            "department": "Sales",
-            "salary": 60000,
-            "experience": 6
-        }
+        data = {"age": 35,
+                "department": "Sales", 
+                "salary": 60000, 
+                "experience": 3
+                }
         test_evaluate_rule(combined_rule_id, data, file)
 
         # Modify Rule

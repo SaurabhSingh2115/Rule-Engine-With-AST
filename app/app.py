@@ -1,12 +1,11 @@
-
 from flask import Flask, jsonify, request
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.orm import sessionmaker, declarative_base
-
 import json
 import logging
 
 app = Flask(__name__)
+
 Base = declarative_base()
 
 # Configure logging
@@ -18,7 +17,7 @@ class RuleModel(Base):
     rule_expression = Column(String, nullable=False)
     ast = Column(Text, nullable=False)
 
-#SQLLite database Initialization
+# SQLite database Initialization
 engine = create_engine('sqlite:///rule.db')
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
@@ -50,7 +49,7 @@ class AST_TreeNode:
             right=cls.from_dict(data['right'])
         )
 
-#rule parsing
+# Rule parsing
 def parse_rule_expression(rule_expression):
     tokens = rule_expression.replace('(', ' ( ').replace(')', ' ) ').split()
 
@@ -115,8 +114,8 @@ def combine_rules():
     rule_ids = request.json['rule_ids']
     rules = session.query(RuleModel).filter(RuleModel.id.in_(rule_ids)).all()
     combined_ast = AST_TreeNode('operator', 'AND', *[AST_TreeNode.from_dict(json.loads(rule.ast)) for rule in rules])
-    cominge_rule_expression = " AND ".join([rule.rule_expression for rule in rules])
-    combined_rule = RuleModel(rule_expression=cominge_rule_expression, ast=json.dumps(combined_ast.convert_to_dict()))
+    combined_rule_expression = " AND ".join([rule.rule_expression for rule in rules])
+    combined_rule = RuleModel(rule_expression=combined_rule_expression, ast=json.dumps(combined_ast.convert_to_dict()))
     session.add(combined_rule)
     session.commit()
     return jsonify({'id': combined_rule.id, 'combined_ast': json.dumps(combined_ast.convert_to_dict())})
