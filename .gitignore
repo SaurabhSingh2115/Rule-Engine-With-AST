@@ -1,1 +1,2 @@
-rule.db
+/app/rule.db
+/tests/test_results.txt
