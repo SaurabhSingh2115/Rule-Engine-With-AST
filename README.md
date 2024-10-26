@@ -22,7 +22,7 @@ https://drive.google.com/file/d/1tSqhYkeICzUtDyuCnp7SIAIh34xbGuXt/view?usp=shari
   ```json
   {
     "id": 1,
-    "ast": "{"type": "operator", "value": "AND", ...}"
+    "ast": {"type": "operator", "value": "AND", ...}
   }
   ```
 - **Description**: Creates a new rule in the database with the provided rule expression.
@@ -41,7 +41,7 @@ https://drive.google.com/file/d/1tSqhYkeICzUtDyuCnp7SIAIh34xbGuXt/view?usp=shari
   ```json
   {
     "id": 4,
-    "combined_ast": "{"type": "operator", "value": "AND", ...}"
+    "combined_ast": {"type": "operator", "value": "AND", ...}
   }
   ```
 - **Description**: Combines multiple rules by IDs into a single rule using AND operator.
